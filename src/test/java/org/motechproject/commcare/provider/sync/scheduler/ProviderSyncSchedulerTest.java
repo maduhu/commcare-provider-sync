@@ -5,7 +5,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.motechproject.commcare.provider.sync.constants.EventSubjects;
+import org.motechproject.commcare.provider.sync.constants.EventConstants;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.scheduler.MotechSchedulerService;
 import org.motechproject.scheduler.domain.CronSchedulableJob;
@@ -36,6 +36,6 @@ public class ProviderSyncSchedulerTest {
         verify(motechSchedulerService).scheduleJob(cronJobCaptor.capture());
         CronSchedulableJob actualScheduledCronJob = cronJobCaptor.getValue();
         assertEquals(cronExpression, actualScheduledCronJob.getCronExpression());
-        assertEquals(new MotechEvent(EventSubjects.FETCH_PROVIDER), actualScheduledCronJob.getMotechEvent());
+        assertEquals(new MotechEvent(EventConstants.COMMCARE_PROVIDER_SYNC_EVENT), actualScheduledCronJob.getMotechEvent());
     }
 }

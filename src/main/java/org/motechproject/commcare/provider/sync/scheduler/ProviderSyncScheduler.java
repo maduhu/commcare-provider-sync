@@ -1,6 +1,6 @@
 package org.motechproject.commcare.provider.sync.scheduler;
 
-import org.motechproject.commcare.provider.sync.constants.EventSubjects;
+import org.motechproject.commcare.provider.sync.constants.EventConstants;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.scheduler.MotechSchedulerService;
 import org.motechproject.scheduler.domain.CronSchedulableJob;
@@ -19,7 +19,7 @@ public class ProviderSyncScheduler {
     @Autowired
     public ProviderSyncScheduler(@Qualifier("providerSyncSettings") SettingsFacade providerSyncSettings, MotechSchedulerService motechSchedulerService) {
         String cronExpression = providerSyncSettings.getProperty(CRON_EXPRESSION);
-        CronSchedulableJob cronJob = new CronSchedulableJob(new MotechEvent(EventSubjects.FETCH_PROVIDER), cronExpression);
+        CronSchedulableJob cronJob = new CronSchedulableJob(new MotechEvent(EventConstants.COMMCARE_PROVIDER_SYNC_EVENT), cronExpression);
         motechSchedulerService.scheduleJob(cronJob);
     }
 }

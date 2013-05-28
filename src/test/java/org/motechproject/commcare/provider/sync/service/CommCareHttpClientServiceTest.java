@@ -10,13 +10,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.commcare.provider.sync.TestUtils;
+import org.motechproject.commcare.provider.sync.constants.PropertyConstants;
+import org.motechproject.commcare.provider.sync.response.BaseResponse;
 import org.motechproject.commcare.provider.sync.response.ProviderDetailsResponse;
 import org.motechproject.server.config.SettingsFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
@@ -34,8 +34,8 @@ public class CommCareHttpClientServiceTest {
 
     @Before
     public void setUp() {
-        when(providerSyncSettings.getProperty("commcare.authentication.username")).thenReturn(username);
-        when(providerSyncSettings.getProperty("commcare.authentication.password")).thenReturn(password);
+        when(providerSyncSettings.getProperty(PropertyConstants.USERNAME)).thenReturn(username);
+        when(providerSyncSettings.getProperty(PropertyConstants.PASSWORD)).thenReturn(password);
         when(restTemplate.getRequestFactory()).thenReturn(new HttpComponentsClientHttpRequestFactory());
         commcareHttpClientService = new CommCareHttpClientService(restTemplate, providerSyncSettings);
     }
@@ -51,52 +51,64 @@ public class CommCareHttpClientServiceTest {
     }
 
     @Test
-    public void shouldGetProviderDetails() {
-        String expectedURL = "baseurl/apiurl";
-        final String limit = "0";
-        final String offset = "0";
-        HashMap<String, String> expectedURLVariables = new HashMap<String, String>() {{
-            put("format", "json");
-            put("limit", limit);
-            put("offset", offset);
-        }};
-        when(providerSyncSettings.getProperty("commcare.base.url")).thenReturn("baseurl/");
-        when(providerSyncSettings.getProperty("commcare.get.provider.list.api.url")).thenReturn("apiurl");
-        when(providerSyncSettings.getProperty("commcare.api.response.limit")).thenReturn(limit);
-        when(providerSyncSettings.getProperty("commcare.api.response.offset")).thenReturn(offset);
+    public void shouldGetProviderDetailsBySendingMultipleRequestsBasedOnResponseAndPublishIt() {
+        String baseUrl = "baseurl/";
+        String apiUrl = "apiurl";
+        String batchSize = "100";
+        TestEventPublishAction testEventPublishAction = new TestEventPublishAction();
+        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_BASE_URL)).thenReturn(baseUrl);
+        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_GET_PROVIDER_LIST_API_URL)).thenReturn(apiUrl);
+        when(providerSyncSettings.getProperty(PropertyConstants.PROVIDER_BATCH_SIZE)).thenReturn(batchSize);
 
-        ResponseEntity<ProviderDetailsResponse> mockedResponseEntity = mock(ResponseEntity.class);
-        when(restTemplate.getForEntity(expectedURL, ProviderDetailsResponse.class, expectedURLVariables)).thenReturn(mockedResponseEntity);
-        when(mockedResponseEntity.getBody()).thenReturn(TestUtils.fromJson(getResponseString(), ProviderDetailsResponse.class));
+        String urlForFirstRequest = String.format("%s%s?offset=0&limit=%s&format=json", baseUrl, apiUrl, batchSize);
+        ResponseEntity<ProviderDetailsResponse> mockedResponseEntity1 = mock(ResponseEntity.class);
+        when(restTemplate.getForEntity(urlForFirstRequest, ProviderDetailsResponse.class)).thenReturn(mockedResponseEntity1);
+        ProviderDetailsResponse responseForFirstRequest = TestUtils.fromJson(getResponseString(), ProviderDetailsResponse.class);
+        when(mockedResponseEntity1.getBody()).thenReturn(responseForFirstRequest);
 
-        ProviderDetailsResponse actualProviderDetails = commcareHttpClientService.getProviderDetails();
+        String urlForSecondRequest = String.format("%s%s?offset=100&limit=%s&format=json", baseUrl, apiUrl, batchSize);
+        ResponseEntity<ProviderDetailsResponse> mockedResponseEntity2 = mock(ResponseEntity.class);
+        when(restTemplate.getForEntity(urlForSecondRequest, ProviderDetailsResponse.class)).thenReturn(mockedResponseEntity2);
+        ProviderDetailsResponse responseForSecondRequest = TestUtils.fromJson(getResponseString().replace("\"next\": \"?offset=100&limit=100&format=json\"", "\"next\": null"), ProviderDetailsResponse.class);
+        when(mockedResponseEntity2.getBody()).thenReturn(responseForSecondRequest);
 
-        verify(restTemplate).getForEntity(expectedURL, ProviderDetailsResponse.class, expectedURLVariables);
-        assertEquals(actualProviderDetails, TestUtils.fromJson(getResponseString(), ProviderDetailsResponse.class));
+        commcareHttpClientService.fetchAndPublishProviderDetails(testEventPublishAction);
+
+        verify(restTemplate).getForEntity(urlForFirstRequest, ProviderDetailsResponse.class);
+        verify(restTemplate).getForEntity(urlForSecondRequest, ProviderDetailsResponse.class);
+        verify(restTemplate, times(2)).getForEntity(anyString(), any(Class.class));
+
+        assertEquals(2, testEventPublishAction.getPublishCount());
     }
 
     @Test
-    public void shouldGetCorrectURL() {
-        when(providerSyncSettings.getProperty("commcare.base.url")).thenReturn("baseurl/");
-        when(providerSyncSettings.getProperty("commcare.get.provider.list.api.url")).thenReturn("/apiurl");
-        when(providerSyncSettings.getProperty("commcare.api.response.limit")).thenReturn("0");
-        when(providerSyncSettings.getProperty("commcare.api.response.offset")).thenReturn("0");
-        String expectedUrlToBeCalled = "baseurl/apiurl";
-        ResponseEntity responseEntity = mock(ResponseEntity.class);
-        when(restTemplate.getForEntity(eq(expectedUrlToBeCalled), any(Class.class), anyMap())).thenReturn(responseEntity);
-        when(responseEntity.getBody()).thenReturn(new ProviderDetailsResponse());
+    public void shouldStopGettingProviderDetailsIfResponseIsNull() {
+        String baseUrl = "baseurl";
+        String apiUrl = "/apiurl";
+        String batchSize = "100";
+        TestEventPublishAction testEventPublishAction = new TestEventPublishAction();
+        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_BASE_URL)).thenReturn(baseUrl);
+        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_GET_PROVIDER_LIST_API_URL)).thenReturn(apiUrl);
+        when(providerSyncSettings.getProperty(PropertyConstants.PROVIDER_BATCH_SIZE)).thenReturn(batchSize);
 
-        commcareHttpClientService.getProviderDetails();
+        String url = String.format("%s%s?offset=0&limit=%s&format=json", baseUrl, apiUrl, batchSize);
+        ResponseEntity<ProviderDetailsResponse> mockedResponseEntity = mock(ResponseEntity.class);
+        when(restTemplate.getForEntity(url, ProviderDetailsResponse.class)).thenReturn(mockedResponseEntity);
+        when(mockedResponseEntity.getBody()).thenReturn(null);
 
-        verify(restTemplate).getForEntity(eq(expectedUrlToBeCalled), any(Class.class), anyMap());
+        commcareHttpClientService.fetchAndPublishProviderDetails(testEventPublishAction);
 
+        verify(restTemplate).getForEntity(url, ProviderDetailsResponse.class);
+        verify(restTemplate, times(1)).getForEntity(anyString(), any(Class.class));
+
+        assertEquals(0, testEventPublishAction.getPublishCount());
     }
 
     private String getResponseString() {
         return "{\n" +
                 "    \"meta\": {\n" +
                 "        \"limit\": 1,\n" +
-                "        \"next\": \"?offset=1&limit=1&format=json\",\n" +
+                "        \"next\": \"?offset=100&limit=100&format=json\",\n" +
                 "        \"offset\": 0,\n" +
                 "        \"previous\": null,\n" +
                 "        \"total_count\": 611\n" +
@@ -123,5 +135,18 @@ public class CommCareHttpClientServiceTest {
                 "        }\n" +
                 "    ]\n" +
                 "}";
+    }
+
+    private class TestEventPublishAction implements EventPublishAction {
+        private int publishCount;
+
+        @Override
+        public void publish(BaseResponse baseResponse) {
+            publishCount++;
+        }
+
+        public int getPublishCount() {
+            return publishCount;
+        }
     }
 }

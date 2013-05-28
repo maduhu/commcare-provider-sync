@@ -1,5 +1,6 @@
 package org.motechproject.commcare.provider.sync.response;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -19,8 +20,16 @@ public class Meta {
     public Meta() {
     }
 
-    public String getNext() {
+    public Meta(String next) {
+        this.next = next;
+    }
+
+    public String getNextQuery() {
         return next;
+    }
+
+    public boolean hasNext() {
+        return StringUtils.isNotBlank(this.next);
     }
 
     @Override

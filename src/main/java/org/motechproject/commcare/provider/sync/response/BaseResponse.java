@@ -8,4 +8,16 @@ public class BaseResponse {
 
     public BaseResponse() {
     }
+
+    public BaseResponse(Meta meta) {
+        this.meta = meta;
+    }
+
+    public Meta getMeta() {
+        return meta;
+    }
+
+    public boolean hasMoreRecordsToFetch() {
+        return meta != null && meta.hasNext();
+    }
 }

@@ -13,6 +13,18 @@ public class ProviderDetailsResponse extends BaseResponse {
     public ProviderDetailsResponse() {
     }
 
+    public List<Provider> getProviders() {
+        return providers;
+    }
+
+    public boolean hasNoProviders() {
+        return providers == null || providers.isEmpty();
+    }
+
+    public void setProviders(List<Provider> providers) {
+        this.providers = providers;
+    }
+
     @Override
     public boolean equals(Object other) {
         return EqualsBuilder.reflectionEquals(this, other);
