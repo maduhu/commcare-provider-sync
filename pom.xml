@@ -59,6 +59,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>org.motechproject.osgi.it</artifactId>
+            <version>1.0.2.RELEASE-r013</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>org.springframework.web.servlet</artifactId>
             <version>${spring.version}</version>
@@ -112,18 +117,22 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Blueprint-Enabled>true</Blueprint-Enabled>
                         <Context-Path>commcare-provider-sync</Context-Path>
-                        <Bundle-Activator>
-                            org.motechproject.osgi.web.WebUIBundleActivator
-                        </Bundle-Activator>
+                        <Resource-Path>commcare-provider-sync/resources</Resource-Path>
+                        <Export-Package>
+                            org.motechproject.commcare.provider.sync.constants;version=${project.version},
+                            org.motechproject.commcare.provider.sync.response;version=${project.version}
+                        </Export-Package>
                         <Import-Package>
                             org.motechproject.server.config;version=${motech.version},
                             org.motechproject.server.config.service;version=${motech.version},
                             org.motechproject.event.listener.annotations;version=${motech.version},
                             org.motechproject.osgi.web;version=${motech.version},
-                            org.motechproject.commons.couchdb.service;version=${motech.version},
                             *
                         </Import-Package>
+                        <Embed-Dependency>!*</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
             </plugin>
@@ -170,6 +179,16 @@
                             </outputDirectory>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>list-dependencies</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>resolve</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>target/dependencies.list</outputFile>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -186,6 +205,43 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>BundleIT</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.9</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.maven.surefire</groupId>
+                                <artifactId>surefire-junit47</artifactId>
+                                <version>2.12.4</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <id>integration-test-osgi</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                </goals>
+                                <configuration>
+                                    <encoding>UTF-8</encoding>
+                                    <includes>
+                                        <include>**/*BundleIT.java</include>
+                                    </includes>
+                                    <forkMode>always</forkMode>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <repositories>
         <repository>
