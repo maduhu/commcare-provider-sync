@@ -32,7 +32,7 @@
         </property>
     </bean>
 
-    <bean id="commcareRestTemplate" class="org.springframework.web.client.RestTemplate">
+    <bean id="commCareRestTemplate" class="org.springframework.web.client.RestTemplate">
         <constructor-arg ref="httpComponentsClientHttpRequestFactory"/>
     </bean>
     <bean id="httpComponentsClientHttpRequestFactory"
