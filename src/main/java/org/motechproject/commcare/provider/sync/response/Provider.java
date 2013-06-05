@@ -32,6 +32,18 @@ public class Provider {
     public Provider() {
     }
 
+    public Map<String, String> getUserData() {
+        return userData;
+    }
+
+    public List<String> getPhoneNumbers() {
+        return phoneNumbers;
+    }
+
+    public List<String> getGroups() {
+        return groups;
+    }
+
     @Override
     public boolean equals(Object other) {
         return EqualsBuilder.reflectionEquals(this, other);
