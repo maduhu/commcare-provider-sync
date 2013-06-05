@@ -27,4 +27,8 @@ public class Group {
 
     public Group() {
     }
+
+    public Map<String, String> getMetaData() {
+        return metaData;
+    }
 }
