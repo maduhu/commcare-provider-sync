@@ -9,8 +9,6 @@ import java.util.Map;
 
 public class Provider {
     @JsonProperty
-    private String type;
-    @JsonProperty
     private String id;
     @JsonProperty
     private String username;
