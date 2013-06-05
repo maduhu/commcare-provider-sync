@@ -21,7 +21,7 @@ public class Group {
     @JsonProperty
     private Boolean reporting;
     @JsonProperty("resource_uri")
-    private Boolean resourceUri;
+    private String resourceUri;
     @JsonProperty
     private List<String> users;
 
