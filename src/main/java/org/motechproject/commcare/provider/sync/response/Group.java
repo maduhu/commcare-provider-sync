@@ -2,10 +2,11 @@ package org.motechproject.commcare.provider.sync.response;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class Group {
+public class Group implements Serializable {
     @JsonProperty("case_sharing")
     private Boolean caseSharing;
     @JsonProperty
@@ -26,6 +27,10 @@ public class Group {
     private List<String> users;
 
     public Group() {
+    }
+
+    public String getId() {
+        return id;
     }
 
     public Map<String, String> getMetaData() {

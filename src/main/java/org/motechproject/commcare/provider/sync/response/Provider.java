@@ -4,10 +4,11 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class Provider {
+public class Provider implements Serializable {
     @JsonProperty
     private String id;
     @JsonProperty
@@ -42,6 +43,10 @@ public class Provider {
 
     public List<String> getGroups() {
         return groups;
+    }
+
+    public String getId() {
+        return id;
     }
 
     @Override

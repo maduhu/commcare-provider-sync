@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CommCareSyncService {
-
     private CommCareHttpClientService commCareHttpClientService;
     private SettingsFacade providerSyncSettings;
 

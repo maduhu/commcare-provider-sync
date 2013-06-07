@@ -38,7 +38,7 @@ public class CommCareSyncEventHandlerTest {
 
     @Test
     public void shouldHandleProviderSyncEventAndPublishProviderDetails() {
-        commCareSyncEventHandler.handleProviderSync();
+        commCareSyncEventHandler.handleProviderSync(null);
 
         ArgumentCaptor<EventPublishAction> eventPublishActionCaptor = ArgumentCaptor.forClass(EventPublishAction.class);
         verify(commCareSyncService).fetchAndPublishProviderDetails(eventPublishActionCaptor.capture());
@@ -56,7 +56,7 @@ public class CommCareSyncEventHandlerTest {
 
     @Test
     public void shouldHandleGroupSyncEventAndPublishGroupDetails() {
-        commCareSyncEventHandler.handleGroupSync();
+        commCareSyncEventHandler.handleGroupSync(null);
 
         ArgumentCaptor<EventPublishAction> eventPublishActionCaptor = ArgumentCaptor.forClass(EventPublishAction.class);
         verify(commCareSyncService).fetchAndPublishGroupDetails(eventPublishActionCaptor.capture());
