@@ -6,6 +6,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.motechproject.commcare.provider.sync.constants.PropertyConstants;
+import org.motechproject.commcare.provider.sync.response.BatchRequestQuery;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +41,18 @@ public class CommCareHttpClientService {
         httpClient.setCredentialsProvider(credentialsProvider);
     }
 
-    public <T> T getResponse(String requestUrl, Class<T> responseType) {
-        logger.info(String.format("Sending http GET request, request url: %s", requestUrl));
-        return restTemplate.getForEntity(requestUrl, responseType).getBody();
+    private <T> T getResponse(String requestUrl, Class<T> responseType) {
+        String completeUrl = completeUrl(requestUrl);
+        logger.info(String.format("Sending http GET request, request url: %s", completeUrl));
+        return restTemplate.getForEntity(completeUrl, responseType).getBody();
+    }
+
+    public <T> T fetchBatch(String listUrl, BatchRequestQuery batchRequestQuery, Class<T> responseType) {
+        String requestUrlWithParams = listUrl + batchRequestQuery.toQuery(PropertyConstants.URL_PARAMS);
+        return getResponse(requestUrlWithParams, responseType);
+    }
+
+    private String completeUrl(String relativeUrl) {
+        return String.format("%s/%s", providerSyncSettings.getProperty(PropertyConstants.COMMCARE_BASE_URL), relativeUrl);
     }
 }

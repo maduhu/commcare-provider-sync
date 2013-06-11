@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.commcare.provider.sync.constants.PropertyConstants;
+import org.motechproject.commcare.provider.sync.response.BatchRequestQuery;
 import org.motechproject.commcare.provider.sync.response.ProviderDetailsResponse;
 import org.motechproject.server.config.SettingsFacade;
 import org.springframework.http.ResponseEntity;
@@ -30,11 +31,13 @@ public class CommCareHttpClientServiceTest {
     private CommCareHttpClientService commCareHttpClientService;
     private String username = "username";
     private String password = "password";
+    private String baseUrl = "baseurl";
 
     @Before
     public void setUp() {
         when(providerSyncSettings.getProperty(PropertyConstants.USERNAME)).thenReturn(username);
         when(providerSyncSettings.getProperty(PropertyConstants.PASSWORD)).thenReturn(password);
+        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_BASE_URL)).thenReturn(baseUrl);
         when(restTemplate.getRequestFactory()).thenReturn(new HttpComponentsClientHttpRequestFactory());
         commCareHttpClientService = new CommCareHttpClientService(restTemplate, providerSyncSettings);
     }
@@ -50,15 +53,22 @@ public class CommCareHttpClientServiceTest {
     }
 
     @Test
-    public void shouldSendAGetRequestAndReturnTheResponse() {
-        String url = "url";
+    public void shouldSendAGetRequestForBatchAndReturnTheResponse() {
+        String listUrl = "listUrl";
+        int offset = 12;
+        int batchSize = 15;
+
         Class<ProviderDetailsResponse> responseType = ProviderDetailsResponse.class;
         ProviderDetailsResponse expectedResponse = new ProviderDetailsResponse();
         ResponseEntity<ProviderDetailsResponse> mockedResponseEntity = mock(ResponseEntity.class);
-        when(restTemplate.getForEntity(url, responseType)).thenReturn(mockedResponseEntity);
+        when(restTemplate.getForEntity("baseurl/listUrl?offset=12&limit=15&format=json", responseType)).thenReturn(mockedResponseEntity);
+
         when(mockedResponseEntity.getBody()).thenReturn(expectedResponse);
 
-        ProviderDetailsResponse actualResponse = commCareHttpClientService.getResponse(url, responseType);
+        BatchRequestQuery batchRequestQuery = new BatchRequestQuery(offset);
+        batchRequestQuery.setBatchSize(batchSize);
+
+        ProviderDetailsResponse actualResponse = commCareHttpClientService.fetchBatch(listUrl, batchRequestQuery, responseType);
 
         assertEquals(expectedResponse, actualResponse);
     }

@@ -17,8 +17,8 @@ public class CommCareSyncScheduler {
 
     @Autowired
     public CommCareSyncScheduler(@Qualifier("providerSyncSettings") SettingsFacade providerSyncSettings, MotechSchedulerService motechSchedulerService) {
-        scheduleCronJob(motechSchedulerService, providerSyncSettings.getProperty(PropertyConstants.PROVIDER_SYNC_CRON_EXPRESSION), EventConstants.COMMCARE_PROVIDER_SYNC_EVENT);
-        scheduleCronJob(motechSchedulerService, providerSyncSettings.getProperty(PropertyConstants.GROUP_SYNC_CRON_EXPRESSION), EventConstants.COMMCARE_GROUP_SYNC_EVENT);
+        scheduleCronJob(motechSchedulerService, providerSyncSettings.getProperty(PropertyConstants.PROVIDER_SYNC_CRON_EXPRESSION), EventConstants.PROVIDER_SYNC_EVENT);
+        scheduleCronJob(motechSchedulerService, providerSyncSettings.getProperty(PropertyConstants.GROUP_SYNC_CRON_EXPRESSION), EventConstants.GROUP_SYNC_EVENT);
     }
 
     private void scheduleCronJob(MotechSchedulerService motechSchedulerService, String cronExpression, String eventSubject) {

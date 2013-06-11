@@ -5,7 +5,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-public class Meta {
+public class BatchResponseMetadata {
     @JsonProperty
     private Integer limit;
     @JsonProperty
@@ -17,15 +17,22 @@ public class Meta {
     @JsonProperty("total_count")
     private Integer totalCount;
 
-    public Meta() {
+    public BatchResponseMetadata() {
     }
 
-    public Meta(String next) {
+    public BatchRequestQuery getNextBatchQuery(int batchSize) {
+        if(!hasNext()) {
+            return null;
+        }
+        return new BatchRequestQuery(offset + batchSize);
+    }
+
+    public void setNext(String next) {
         this.next = next;
     }
 
-    public String getNextQuery() {
-        return next;
+    public void setOffset(Integer offset) {
+        this.offset = offset;
     }
 
     public boolean hasNext() {

@@ -41,8 +41,8 @@ public class CommCareSyncSchedulerTest {
         List<CronSchedulableJob> actualScheduledCronJob = cronJobCaptor.getAllValues();
         assertEquals(2, actualScheduledCronJob.size());
         assertEquals(providerSyncCronExpression, actualScheduledCronJob.get(0).getCronExpression());
-        assertEquals(new MotechEvent(EventConstants.COMMCARE_PROVIDER_SYNC_EVENT), actualScheduledCronJob.get(0).getMotechEvent());
+        assertEquals(new MotechEvent(EventConstants.PROVIDER_SYNC_EVENT), actualScheduledCronJob.get(0).getMotechEvent());
         assertEquals(ownerSyncCronExpression, actualScheduledCronJob.get(1).getCronExpression());
-        assertEquals(new MotechEvent(EventConstants.COMMCARE_GROUP_SYNC_EVENT), actualScheduledCronJob.get(1).getMotechEvent());
+        assertEquals(new MotechEvent(EventConstants.GROUP_SYNC_EVENT), actualScheduledCronJob.get(1).getMotechEvent());
     }
 }

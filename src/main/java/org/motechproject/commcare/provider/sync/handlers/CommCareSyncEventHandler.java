@@ -1,11 +1,9 @@
 package org.motechproject.commcare.provider.sync.handlers;
 
 import org.motechproject.commcare.provider.sync.constants.EventConstants;
-import org.motechproject.commcare.provider.sync.response.BaseResponse;
-import org.motechproject.commcare.provider.sync.response.GroupDetailsResponse;
-import org.motechproject.commcare.provider.sync.response.ProviderDetailsResponse;
+import org.motechproject.commcare.provider.sync.response.BatchJobType;
+import org.motechproject.commcare.provider.sync.response.BatchRequestQuery;
 import org.motechproject.commcare.provider.sync.service.CommCareSyncService;
-import org.motechproject.commcare.provider.sync.service.EventPublishAction;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
@@ -14,15 +12,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Component
 public class CommCareSyncEventHandler {
     private static final Logger logger = LoggerFactory.getLogger("commcare-provider-sync");
 
-    CommCareSyncService commCareSyncService;
-    EventRelay eventRelay;
+    private CommCareSyncService commCareSyncService;
+    private EventRelay eventRelay;
 
     @Autowired
     public CommCareSyncEventHandler(CommCareSyncService commCareSyncService, EventRelay eventRelay) {
@@ -30,39 +25,34 @@ public class CommCareSyncEventHandler {
         this.eventRelay = eventRelay;
     }
 
-    @MotechListener(subjects = {EventConstants.COMMCARE_PROVIDER_SYNC_EVENT})
+    @MotechListener(subjects = {EventConstants.PROVIDER_SYNC_EVENT})
     @SuppressWarnings("unused - motechEvent expected as parameter by cron invoker")
-    public void handleProviderSync(MotechEvent motechEvent) {
+    public synchronized void handleProviderSync(MotechEvent motechEvent) {
         logger.info("Handling provider sync event");
-        commCareSyncService.fetchAndPublishProviderDetails(new EventPublishAction() {
-            @Override
-            public void publish(BaseResponse baseResponse) {
-                logger.info("Publishing provider details");
-                ProviderDetailsResponse providerDetailsResponse = (ProviderDetailsResponse) baseResponse;
-                if (providerDetailsResponse.hasNoProviders())
-                    return;
-                Map<String, Object> parameters = new HashMap<>();
-                parameters.put(EventConstants.PROVIDER_DETAILS, providerDetailsResponse.getProviders());
-                eventRelay.sendEventMessage(new MotechEvent(EventConstants.PROVIDER_DETAILS_EVENT, parameters));
-            }
-        });
+        commCareSyncService.fetchDetailsInBatch(new BatchRequestQuery(0), BatchJobType.PROVIDER);
     }
 
-    @MotechListener(subjects = {EventConstants.COMMCARE_GROUP_SYNC_EVENT})
+    @MotechListener(subjects = {EventConstants.PROVIDER_FETCH_DETAILS_IN_BATCH_EVENT})
     @SuppressWarnings("unused - motechEvent expected as parameter by cron invoker")
-    public void handleGroupSync(MotechEvent motechEvent) {
+    public void fetchProviderDetailsInBatch(MotechEvent motechEvent) {
+        logger.info("Handling provider batch sync event");
+        BatchRequestQuery batchQuery = (BatchRequestQuery) motechEvent.getParameters().get(EventConstants.BATCH_QUERY);
+        commCareSyncService.fetchDetailsInBatch(batchQuery, BatchJobType.PROVIDER);
+    }
+
+
+    @MotechListener(subjects = {EventConstants.GROUP_SYNC_EVENT})
+    @SuppressWarnings("unused - motechEvent expected as parameter by cron invoker")
+    public synchronized void handleGroupSync(MotechEvent motechEvent) {
         logger.info("Handling group sync event");
-        commCareSyncService.fetchAndPublishGroupDetails(new EventPublishAction() {
-            @Override
-            public void publish(BaseResponse baseResponse) {
-                logger.info("Publishing group details");
-                GroupDetailsResponse groupDetailsResponse = (GroupDetailsResponse) baseResponse;
-                if (groupDetailsResponse.hasNoGroups())
-                    return;
-                Map<String, Object> parameters = new HashMap<>();
-                parameters.put(EventConstants.GROUP_DETAILS, groupDetailsResponse.getGroups());
-                eventRelay.sendEventMessage(new MotechEvent(EventConstants.GROUP_DETAILS_EVENT, parameters));
-            }
-        });
+        commCareSyncService.fetchDetailsInBatch(new BatchRequestQuery(0), BatchJobType.GROUP);
+    }
+
+    @MotechListener(subjects = {EventConstants.GROUP_FETCH_DETAILS_IN_BATCH_EVENT})
+    @SuppressWarnings("unused - motechEvent expected as parameter by cron invoker")
+    public void fetchGroupDetailsInBatch(MotechEvent motechEvent) {
+        logger.info("Handling group batch sync event");
+        BatchRequestQuery batchQuery = (BatchRequestQuery) motechEvent.getParameters().get(EventConstants.BATCH_QUERY);
+        commCareSyncService.fetchDetailsInBatch(batchQuery, BatchJobType.GROUP);
     }
 }

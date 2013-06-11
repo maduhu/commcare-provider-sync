@@ -3,17 +3,32 @@ package org.motechproject.commcare.provider.sync.service;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.motechproject.commcare.provider.sync.TestUtils;
-import org.motechproject.commcare.provider.sync.constants.PropertyConstants;
-import org.motechproject.commcare.provider.sync.response.BaseResponse;
+import org.motechproject.commcare.provider.sync.constants.EventConstants;
+import org.motechproject.commcare.provider.sync.response.BatchJobType;
+import org.motechproject.commcare.provider.sync.response.BatchRequestQuery;
+import org.motechproject.commcare.provider.sync.response.BatchResponseMetadata;
+import org.motechproject.commcare.provider.sync.response.Group;
 import org.motechproject.commcare.provider.sync.response.GroupDetailsResponse;
+import org.motechproject.commcare.provider.sync.response.Provider;
 import org.motechproject.commcare.provider.sync.response.ProviderDetailsResponse;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.server.config.SettingsFacade;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommCareSyncServiceTest {
@@ -21,159 +36,114 @@ public class CommCareSyncServiceTest {
     private SettingsFacade providerSyncSettings;
     @Mock
     private CommCareHttpClientService commCareHttpClientService;
+    @Mock
+    private EventRelay eventRelay;
 
     private CommCareSyncService commcareSyncService;
 
     @Before
     public void setUp() {
-        commcareSyncService = new CommCareSyncService(commCareHttpClientService, providerSyncSettings);
+        commcareSyncService = new CommCareSyncService(eventRelay, commCareHttpClientService, providerSyncSettings);
     }
 
     @Test
-    public void shouldGetProviderDetailsBySendingMultipleRequestsBasedOnResponseAndPublishIt() {
-        String baseUrl = "baseurl/";
-        String apiUrl = "apiurl";
-        String batchSize = "100";
-        TestEventPublishAction testEventPublishAction = new TestEventPublishAction();
-        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_BASE_URL)).thenReturn(baseUrl);
-        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_GET_PROVIDER_LIST_API_URL)).thenReturn(apiUrl);
-        when(providerSyncSettings.getProperty(PropertyConstants.PROVIDER_BATCH_SIZE)).thenReturn(batchSize);
+    public void shouldFetchDetailsInBatch() {
+        int batchSize = 45;
+        String providerUrl = "providerListUrl";
+        BatchRequestQuery batchRequestQuery = mock(BatchRequestQuery.class);
+        ProviderDetailsResponse providerDetailsResponse = mock(ProviderDetailsResponse.class);
+        BatchResponseMetadata meta = mock(BatchResponseMetadata.class);
+        final BatchRequestQuery nextBatchRequestQuery = new BatchRequestQuery(12);
 
-        String urlForFirstRequest = String.format("%s%s?offset=0&limit=%s&format=json", baseUrl, apiUrl, batchSize);
-        String urlForSecondRequest = String.format("%s%s?offset=100&limit=%s&format=json", baseUrl, apiUrl, batchSize);
-        setUpResponse(urlForFirstRequest, urlForSecondRequest, ProviderDetailsResponse.class, getProviderResponseString());
+        when(providerSyncSettings.getProperty("commcare.batch.size.provider")).thenReturn(Integer.toString(batchSize));
+        when(providerSyncSettings.getProperty("commcare.list.url.provider")).thenReturn(providerUrl);
+        when(commCareHttpClientService.fetchBatch(providerUrl, batchRequestQuery, ProviderDetailsResponse.class)).thenReturn(providerDetailsResponse);
 
-        commcareSyncService.fetchAndPublishProviderDetails(testEventPublishAction);
+        final List<Provider> providers = Arrays.asList(new Provider(), new Provider());
+        when(providerDetailsResponse.getRecords()).thenReturn(providers);
+        when(providerDetailsResponse.getMeta()).thenReturn(meta);
+        when(providerDetailsResponse.hasRecords()).thenReturn(true);
+        when(meta.getNextBatchQuery(batchSize)).thenReturn(nextBatchRequestQuery);
+        when(meta.hasNext()).thenReturn(true);
 
-        verifyHttpClientInteraction(testEventPublishAction, urlForFirstRequest, urlForSecondRequest, ProviderDetailsResponse.class);
+        commcareSyncService.fetchDetailsInBatch(batchRequestQuery, BatchJobType.PROVIDER);
+
+        verify(batchRequestQuery).setBatchSize(batchSize);
+
+        assertEventToBePublished(new MotechEvent(EventConstants.PROVIDER_DETAILS_EVENT, new HashMap<String, Object>() {{
+            put(EventConstants.DETAILS_LIST, providers);
+        }}), new MotechEvent(EventConstants.PROVIDER_FETCH_DETAILS_IN_BATCH_EVENT, new HashMap<String, Object>() {{
+            put(EventConstants.BATCH_QUERY, nextBatchRequestQuery);
+        }}));
     }
 
     @Test
-    public void shouldGetGroupDetailsBySendingMultipleRequestsBasedOnResponseAndPublishIt() {
-        String baseUrl = "baseurl/";
-        String apiUrl = "apiurl";
-        String batchSize = "100";
-        TestEventPublishAction testEventPublishAction = new TestEventPublishAction();
-        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_BASE_URL)).thenReturn(baseUrl);
-        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_GET_GROUP_LIST_API_URL)).thenReturn(apiUrl);
-        when(providerSyncSettings.getProperty(PropertyConstants.GROUP_BATCH_SIZE)).thenReturn(batchSize);
+    public void shouldNotRaiseDetailsEventIfResponseHasNoRecords() {
+        int batchSize = 45;
+        String groupUrl = "providerListUrl";
+        BatchRequestQuery batchRequestQuery = mock(BatchRequestQuery.class);
+        GroupDetailsResponse groupDetailsResponse = mock(GroupDetailsResponse.class);
+        BatchResponseMetadata meta = mock(BatchResponseMetadata.class);
+        final BatchRequestQuery nextBatchRequestQuery = new BatchRequestQuery(12);
 
-        String urlForFirstRequest = String.format("%s%s?offset=0&limit=%s&format=json", baseUrl, apiUrl, batchSize);
-        String urlForSecondRequest = String.format("%s%s?offset=100&limit=%s&format=json", baseUrl, apiUrl, batchSize);
-        setUpResponse(urlForFirstRequest, urlForSecondRequest, GroupDetailsResponse.class, getGroupResponseString());
+        when(providerSyncSettings.getProperty("commcare.batch.size.group")).thenReturn(Integer.toString(batchSize));
+        when(providerSyncSettings.getProperty("commcare.list.url.group")).thenReturn(groupUrl);
+        when(commCareHttpClientService.fetchBatch(groupUrl, batchRequestQuery, GroupDetailsResponse.class)).thenReturn(groupDetailsResponse);
 
-        commcareSyncService.fetchAndPublishGroupDetails(testEventPublishAction);
+        when(groupDetailsResponse.getRecords()).thenReturn(new ArrayList<Group>());
+        when(groupDetailsResponse.hasRecords()).thenReturn(false);
+        when(groupDetailsResponse.getMeta()).thenReturn(meta);
+        when(meta.getNextBatchQuery(batchSize)).thenReturn(nextBatchRequestQuery);
+        when(meta.hasNext()).thenReturn(true);
 
-        verifyHttpClientInteraction(testEventPublishAction, urlForFirstRequest, urlForSecondRequest, GroupDetailsResponse.class);
-    }
+        commcareSyncService.fetchDetailsInBatch(batchRequestQuery, BatchJobType.GROUP);
 
-    private <T> void setUpResponse(String urlForFirstRequest, String urlForSecondRequest, Class<T> responseType, String responseString) {
-        T responseForFirstRequest = TestUtils.fromJson(responseString, responseType);
-        when(commCareHttpClientService.getResponse(urlForFirstRequest, responseType)).thenReturn(responseForFirstRequest);
+        verify(batchRequestQuery).setBatchSize(batchSize);
 
-        T responseForSecondRequest = TestUtils.fromJson(responseString.replace("\"next\": \"?offset=100&limit=100&format=json\"", "\"next\": null"), responseType);
-        when(commCareHttpClientService.getResponse(urlForSecondRequest, responseType)).thenReturn(responseForSecondRequest);
-    }
-
-    private <T> void verifyHttpClientInteraction(TestEventPublishAction testEventPublishAction, String urlForFirstRequest, String urlForSecondRequest, Class<T> responseType) {
-        verify(commCareHttpClientService).getResponse(urlForFirstRequest, responseType);
-        verify(commCareHttpClientService).getResponse(urlForSecondRequest, responseType);
-        verifyNoMoreInteractions(commCareHttpClientService);
-
-        assertEquals(2, testEventPublishAction.getPublishCount());
+        assertEventToBePublished(new MotechEvent(EventConstants.GROUP_FETCH_DETAILS_IN_BATCH_EVENT, new HashMap<String, Object>() {{
+            put(EventConstants.BATCH_QUERY, nextBatchRequestQuery);
+        }}));
+        verifyNoMoreInteractions(eventRelay);
     }
 
     @Test
-    public void shouldStopGettingProviderDetailsIfResponseIsNull() {
-        String baseUrl = "baseurl";
-        String apiUrl = "/apiurl";
-        String batchSize = "100";
-        TestEventPublishAction testEventPublishAction = new TestEventPublishAction();
-        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_BASE_URL)).thenReturn(baseUrl);
-        when(providerSyncSettings.getProperty(PropertyConstants.COMMCARE_GET_PROVIDER_LIST_API_URL)).thenReturn(apiUrl);
-        when(providerSyncSettings.getProperty(PropertyConstants.PROVIDER_BATCH_SIZE)).thenReturn(batchSize);
+    public void shouldNotRaiseNextBatchEventIfNextQueryParamInResponseIsNull() {
+        int batchSize = 45;
+        String providerUrl = "providerListUrl";
+        BatchRequestQuery batchRequestQuery = mock(BatchRequestQuery.class);
+        ProviderDetailsResponse providerDetailsResponse = mock(ProviderDetailsResponse.class);
+        BatchResponseMetadata meta = mock(BatchResponseMetadata.class);
+        final BatchRequestQuery nextBatchRequestQuery = new BatchRequestQuery(12);
 
-        String url = String.format("%s%s?offset=0&limit=%s&format=json", baseUrl, apiUrl, batchSize);
-        when(commCareHttpClientService.getResponse(url, ProviderDetailsResponse.class)).thenReturn(null);
+        when(providerSyncSettings.getProperty("commcare.batch.size.provider")).thenReturn(Integer.toString(batchSize));
+        when(providerSyncSettings.getProperty("commcare.list.url.provider")).thenReturn(providerUrl);
+        when(commCareHttpClientService.fetchBatch(providerUrl, batchRequestQuery, ProviderDetailsResponse.class)).thenReturn(providerDetailsResponse);
 
-        commcareSyncService.fetchAndPublishProviderDetails(testEventPublishAction);
+        final List<Provider> providers = Arrays.asList(new Provider(), new Provider());
+        when(providerDetailsResponse.getRecords()).thenReturn(providers);
+        when(providerDetailsResponse.getMeta()).thenReturn(meta);
+        when(providerDetailsResponse.hasRecords()).thenReturn(true);
+        when(meta.getNextBatchQuery(batchSize)).thenReturn(nextBatchRequestQuery);
+        when(meta.hasNext()).thenReturn(false);
 
-        verify(commCareHttpClientService).getResponse(url, ProviderDetailsResponse.class);
-        verifyNoMoreInteractions(commCareHttpClientService);
+        commcareSyncService.fetchDetailsInBatch(batchRequestQuery, BatchJobType.PROVIDER);
 
-        assertEquals(0, testEventPublishAction.getPublishCount());
+        verify(batchRequestQuery).setBatchSize(batchSize);
+
+        assertEventToBePublished(new MotechEvent(EventConstants.PROVIDER_DETAILS_EVENT, new HashMap<String, Object>() {{
+            put(EventConstants.DETAILS_LIST, providers);
+        }}));
+        verifyNoMoreInteractions(eventRelay);
     }
 
-    private String getProviderResponseString() {
-        return "{\n" +
-                "    \"meta\": {\n" +
-                "        \"limit\": 1,\n" +
-                "        \"next\": \"?offset=100&limit=100&format=json\",\n" +
-                "        \"offset\": 0,\n" +
-                "        \"previous\": null,\n" +
-                "        \"total_count\": 611\n" +
-                "    },\n" +
-                "    \"objects\": [\n" +
-                "        {\n" +
-                "            \"default_phone_number\": \"8294168471\",\n" +
-                "            \"email\": \"\",\n" +
-                "            \"first_name\": \"Dr.Pramod\",\n" +
-                "            \"groups\": [\n" +
-                "                \"89fda0284e008d2e0c980fb13fc18199\"\n" +
-                "            ],\n" +
-                "            \"id\": \"b0645df855266f29849eb2515b5ed57c\",\n" +
-                "            \"last_name\": \"Kumar Gautam\",\n" +
-                "            \"phone_numbers\": [\n" +
-                "                \"8294168471\"\n" +
-                "            ],\n" +
-                "            \"resource_uri\": \"\",\n" +
-                "            \"user_data\": {\n" +
-                "                \"asset-id\": \"MP818\",\n" +
-                "                \"block\": \"Sonbarsa\"\n" +
-                "            },\n" +
-                "            \"username\": \"8294168471@care-bihar.commcarehq.org\"\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}";
-    }
-
-    private String getGroupResponseString() {
-        return "{\n" +
-                "    \"meta\": {\n" +
-                "        \"limit\": 1,\n" +
-                "        \"next\": \"?offset=100&limit=100&format=json\",\n" +
-                "        \"offset\": 0,\n" +
-                "        \"previous\": null,\n" +
-                "        \"total_count\": 410\n" +
-                "    },\n" +
-                "    \"objects\": [\n" +
-                "        {\n" +
-                "            \"case_sharing\": true,\n" +
-                "            \"domain\": \"care-bihar\",\n" +
-                "            \"id\": \"3c5a80e4db53049dfc110c368a0d05d4\",\n" +
-                "            \"metadata\": {\n" +
-                "                \"awc-code\": \"\"\n" +
-                "            },\n" +
-                "            \"name\": \"danny team 1\",\n" +
-                "            \"path\": [],\n" +
-                "            \"reporting\": true,\n" +
-                "            \"resource_uri\": \"\",\n" +
-                "            \"users\": []\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}";
-    }
-
-    private class TestEventPublishAction implements EventPublishAction {
-        private int publishCount;
-
-        @Override
-        public void publish(BaseResponse baseResponse) {
-            publishCount++;
-        }
-
-        public int getPublishCount() {
-            return publishCount;
+    private void assertEventToBePublished(MotechEvent... expectedEvents) {
+        ArgumentCaptor<MotechEvent> motechEventCaptor = ArgumentCaptor.forClass(MotechEvent.class);
+        verify(eventRelay, times(expectedEvents.length)).sendEventMessage(motechEventCaptor.capture());
+        List<MotechEvent> actualEvents = motechEventCaptor.getAllValues();
+        int counter = 0;
+        for (MotechEvent actualEvent : actualEvents) {
+            assertEquals(actualEvent, expectedEvents[counter]);
+            counter++;
         }
     }
 }

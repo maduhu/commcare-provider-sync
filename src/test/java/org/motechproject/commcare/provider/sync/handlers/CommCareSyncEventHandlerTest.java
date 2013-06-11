@@ -7,20 +7,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.commcare.provider.sync.constants.EventConstants;
-import org.motechproject.commcare.provider.sync.response.Group;
-import org.motechproject.commcare.provider.sync.response.GroupDetailsResponse;
-import org.motechproject.commcare.provider.sync.response.Provider;
-import org.motechproject.commcare.provider.sync.response.ProviderDetailsResponse;
+import org.motechproject.commcare.provider.sync.response.BatchJobType;
+import org.motechproject.commcare.provider.sync.response.BatchRequestQuery;
 import org.motechproject.commcare.provider.sync.service.CommCareSyncService;
-import org.motechproject.commcare.provider.sync.service.EventPublishAction;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static junit.framework.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommCareSyncEventHandlerTest {
@@ -37,47 +32,42 @@ public class CommCareSyncEventHandlerTest {
     }
 
     @Test
-    public void shouldHandleProviderSyncEventAndPublishProviderDetails() {
+    public void shouldHandleProviderSyncEvent() {
         commCareSyncEventHandler.handleProviderSync(null);
 
-        ArgumentCaptor<EventPublishAction> eventPublishActionCaptor = ArgumentCaptor.forClass(EventPublishAction.class);
-        verify(commCareSyncService).fetchAndPublishProviderDetails(eventPublishActionCaptor.capture());
-
-        EventPublishAction actualEventPublishAction = eventPublishActionCaptor.getValue();
-        ProviderDetailsResponse mockedProviderDetailsResponse = mock(ProviderDetailsResponse.class);
-        when(mockedProviderDetailsResponse.hasNoProviders()).thenReturn(false);
-        ArrayList<Provider> providers = new ArrayList<>();
-        when(mockedProviderDetailsResponse.getProviders()).thenReturn(providers);
-
-        actualEventPublishAction.publish(mockedProviderDetailsResponse);
-
-        assertEventToBePublished(providers, EventConstants.PROVIDER_DETAILS_EVENT, EventConstants.PROVIDER_DETAILS);
+        ArgumentCaptor<BatchRequestQuery> batchRequestQueryArgumentCaptor = ArgumentCaptor.forClass(BatchRequestQuery.class);
+        verify(commCareSyncService).fetchDetailsInBatch(batchRequestQueryArgumentCaptor.capture(), eq(BatchJobType.PROVIDER));
+        assertEquals(0, batchRequestQueryArgumentCaptor.getValue().getOffset());
     }
 
     @Test
-    public void shouldHandleGroupSyncEventAndPublishGroupDetails() {
+    public void shouldHandleGroupSyncEvent() {
         commCareSyncEventHandler.handleGroupSync(null);
 
-        ArgumentCaptor<EventPublishAction> eventPublishActionCaptor = ArgumentCaptor.forClass(EventPublishAction.class);
-        verify(commCareSyncService).fetchAndPublishGroupDetails(eventPublishActionCaptor.capture());
-
-        EventPublishAction actualEventPublishAction = eventPublishActionCaptor.getValue();
-        GroupDetailsResponse mockedGroupDetailResponse = mock(GroupDetailsResponse.class);
-        when(mockedGroupDetailResponse.hasNoGroups()).thenReturn(false);
-        ArrayList<Group> groups = new ArrayList<>();
-        when(mockedGroupDetailResponse.getGroups()).thenReturn(groups);
-
-        actualEventPublishAction.publish(mockedGroupDetailResponse);
-
-        assertEventToBePublished(groups, EventConstants.GROUP_DETAILS_EVENT, EventConstants.GROUP_DETAILS);
+        ArgumentCaptor<BatchRequestQuery> batchRequestQueryArgumentCaptor = ArgumentCaptor.forClass(BatchRequestQuery.class);
+        verify(commCareSyncService).fetchDetailsInBatch(batchRequestQueryArgumentCaptor.capture(), eq(BatchJobType.GROUP));
+        assertEquals(0, batchRequestQueryArgumentCaptor.getValue().getOffset());
     }
 
-    private void assertEventToBePublished(List details, String eventSubject, String eventParameterKey) {
-        ArgumentCaptor<MotechEvent> motechEventCaptor = ArgumentCaptor.forClass(MotechEvent.class);
-        verify(eventRelay).sendEventMessage(motechEventCaptor.capture());
-        MotechEvent actualMotechEvent = motechEventCaptor.getValue();
-        assertEquals(eventSubject, actualMotechEvent.getSubject());
-        assertEquals(1, actualMotechEvent.getParameters().size());
-        assertEquals(details, actualMotechEvent.getParameters().get(eventParameterKey));
+    @Test
+    public void shouldFetchProviderDetailsInBatch() {
+        BatchRequestQuery batchRequestQuery = new BatchRequestQuery(12);
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put(EventConstants.BATCH_QUERY, batchRequestQuery);
+
+        commCareSyncEventHandler.fetchProviderDetailsInBatch(event);
+
+        verify(commCareSyncService).fetchDetailsInBatch(batchRequestQuery, BatchJobType.PROVIDER);
+    }
+
+    @Test
+    public void shouldFetchGroupDetailsInBatch() {
+        BatchRequestQuery batchRequestQuery = new BatchRequestQuery(12);
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put(EventConstants.BATCH_QUERY, batchRequestQuery);
+
+        commCareSyncEventHandler.fetchGroupDetailsInBatch(event);
+
+        verify(commCareSyncService).fetchDetailsInBatch(batchRequestQuery, BatchJobType.GROUP);
     }
 }

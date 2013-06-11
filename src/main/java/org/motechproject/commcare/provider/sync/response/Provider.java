@@ -26,7 +26,7 @@ public class Provider implements Serializable {
     @JsonProperty
     private List<String> groups;
     @JsonProperty("user_data")
-    private Map<String,String> userData;
+    private Map<String, String> userData;
     @JsonProperty("resource_uri")
     private String resourceURI;
 
