@@ -26,14 +26,38 @@ public class Provider implements Serializable {
     @JsonProperty
     private List<String> groups;
     @JsonProperty("user_data")
-    private Map<String, String> userData;
+    private Map<String, Object> userData;
     @JsonProperty("resource_uri")
     private String resourceURI;
 
     public Provider() {
     }
 
-    public Map<String, String> getUserData() {
+    public String getUsername() {
+        return username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getDefaultPhoneNumber() {
+        return defaultPhoneNumber;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getResourceURI() {
+        return resourceURI;
+    }
+
+    public Map<String, Object> getUserData() {
         return userData;
     }
 

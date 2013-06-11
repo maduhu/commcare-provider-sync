@@ -14,7 +14,7 @@ public class Group implements Serializable {
     @JsonProperty
     private String id;
     @JsonProperty("metadata")
-    private Map<String, String> metaData;
+    private Map<String, Object> metaData;
     @JsonProperty
     private String name;
     @JsonProperty
@@ -33,7 +33,35 @@ public class Group implements Serializable {
         return id;
     }
 
-    public Map<String, String> getMetaData() {
+    public Map<String, Object> getMetaData() {
         return metaData;
+    }
+
+    public Boolean getCaseSharing() {
+        return caseSharing;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<String> getPath() {
+        return path;
+    }
+
+    public Boolean getReporting() {
+        return reporting;
+    }
+
+    public String getResourceUri() {
+        return resourceUri;
+    }
+
+    public List<String> getUsers() {
+        return users;
     }
 }
