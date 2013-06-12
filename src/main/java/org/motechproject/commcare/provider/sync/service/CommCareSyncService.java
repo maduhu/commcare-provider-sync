@@ -55,7 +55,7 @@ public class CommCareSyncService {
 
         String eventSubject = jobType.qualify(EventConstants.FETCH_DETAILS_IN_BATCH_EVENT);
         BatchRequestQuery nextBatchQuery = batchResponseMetadata.getNextBatchQuery(batchSize);
-        logger.info(String.format("Raising event %s for next batch query %s", eventSubject, nextBatchQuery));
+        logger.info(String.format("Raising event %s for next batch offset %s", eventSubject, nextBatchQuery.getOffset()));
         Map<String, Object> parameters = new HashMap<>();
         parameters.put(EventConstants.BATCH_QUERY, nextBatchQuery);
         eventRelay.sendEventMessage(new MotechEvent(eventSubject, parameters));
