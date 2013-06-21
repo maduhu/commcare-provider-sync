@@ -10,7 +10,7 @@
     <context:component-scan base-package="org.motechproject.commcare.provider.sync"/>
 
     <!-- get a settings instance to store your module's properties -->
-    <bean id="providerSyncSettings" class="org.motechproject.server.config.SettingsFacade">
+    <bean id="providerSyncSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
         <property name="moduleName" value="commcare-provider-sync"/>
         <property name="configFiles">
             <list>
