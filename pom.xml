@@ -51,6 +51,7 @@
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-osgi-web-util</artifactId>
             <version>${motech.version}</version>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework</groupId>
@@ -96,8 +97,25 @@
             <scope>test</scope>
             <version>1.8.5</version>
         </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-all</artifactId>
+            <version>1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>com.springsource.org.aspectj.runtime</artifactId>
+            <version>1.6.12.RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.osgi</groupId>
+            <artifactId>org.eclipse.osgi</artifactId>
+            <version>3.6.0.v20100517</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <!-- remember to use java7 -->
@@ -137,7 +155,6 @@
                     </instructions>
                 </configuration>
             </plugin>
-
             <!-- copy your bundle to ~/.motech/bundles from where the server can access it -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -166,16 +183,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.5.1</version>
                 <executions>
                     <execution>
-                        <id>list-dependencies</id>
-                        <phase>generate-sources</phase>
+                        <id>copy-osgi-dependencies</id>
                         <goals>
-                            <goal>resolve</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputFile>target/dependencies.list</outputFile>
+                            <includeScope>compile</includeScope>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <outputDirectory>
+                                ${user.home}/.motech/bundles
+                            </outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
