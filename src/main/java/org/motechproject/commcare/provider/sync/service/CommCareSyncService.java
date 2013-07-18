@@ -2,11 +2,7 @@ package org.motechproject.commcare.provider.sync.service;
 
 import org.motechproject.commcare.provider.sync.constants.EventConstants;
 import org.motechproject.commcare.provider.sync.constants.PropertyConstants;
-import org.motechproject.commcare.provider.sync.response.BatchJobType;
-import org.motechproject.commcare.provider.sync.response.BatchRequestQuery;
-import org.motechproject.commcare.provider.sync.response.BatchResponse;
-import org.motechproject.commcare.provider.sync.response.BatchResponseMetadata;
-import org.motechproject.commcare.provider.sync.response.Provider;
+import org.motechproject.commcare.provider.sync.response.*;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.server.config.SettingsFacade;
@@ -49,7 +45,8 @@ public class CommCareSyncService {
 
     private void raiseNextBatchRequestEvent(BatchJobType jobType, BatchResponse batchResponse, int batchSize) {
         BatchResponseMetadata batchResponseMetadata = batchResponse.getMeta();
-        if(!batchResponseMetadata.hasNext()) {
+        if (!batchResponseMetadata.hasNext()) {
+            logger.info(String.format("Completed %s sync event", jobType.name()));
             return;
         }
 
