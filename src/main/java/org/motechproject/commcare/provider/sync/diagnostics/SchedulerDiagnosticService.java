@@ -83,10 +83,6 @@ public class SchedulerDiagnosticService {
             diagnosticLog.add("");
         }
 
-        if (!checkMotechScheduler(diagnosticLog)) {
-            status = DiagnosticsStatus.FAIL;
-        }
-
         return new DiagnosticsResult(status, diagnosticLog.toString());
     }
 
@@ -99,12 +95,6 @@ public class SchedulerDiagnosticService {
             }
         });
         return (ArrayList<String>) CollectionUtils.disjunction(jobs, jobDetailNamesList);
-    }
-
-    private boolean checkMotechScheduler(DiagnosticLog diagnosticLog) throws SchedulerException {
-        boolean schedulerRunning = scheduler.isStarted();
-        diagnosticLog.add(String.format("Motech Scheduler: %s", schedulerRunning ? "Running" : "Not Running"));
-        return schedulerRunning;
     }
 
     private boolean hasJobRunInPreviousWeek(JobDetails jobDetails, DiagnosticLog diagnosticLog) {

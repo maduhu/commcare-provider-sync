@@ -56,7 +56,6 @@ public class SchedulerDiagnosticServiceTest {
         when(motechScheduler.getTrigger(triggerKey2)).thenReturn(mockTrigger2);
         when(mockTrigger1.getJobKey()).thenReturn(new JobKey(providerSync));
         when(mockTrigger2.getJobKey()).thenReturn(new JobKey(groupSync));
-        when(motechScheduler.isStarted()).thenReturn(true);
 
         ArrayList jobKeyList = mock(ArrayList.class);
         when(motechScheduler.getTriggersOfJob(any(JobKey.class))).thenReturn(jobKeyList);
@@ -77,19 +76,6 @@ public class SchedulerDiagnosticServiceTest {
         assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, providerSync, "This job has not yet run", mockTrigger1.getNextFireTime(), "N/A")));
         assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, groupSync, "This job has not yet run", mockTrigger2.getNextFireTime(), "N/A")));
         assertEquals(DiagnosticsStatus.PASS, diagnosticsResult.getStatus());
-    }
-
-    @Test
-    public void shouldPrintMotechSchedulerIsNotRunning() throws SchedulerException {
-        initializeTriggers();
-        when(motechScheduler.isStarted()).thenReturn(false);
-        when(mockTrigger1.getPreviousFireTime()).thenReturn(null);
-        when(mockTrigger1.getNextFireTime()).thenReturn(DateTime.now().plusMonths(4).toDate());
-
-        DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseAllSchedules();
-
-        assertTrue(diagnosticsResult.getMessage().contains("Motech Scheduler: Not Running"));
-        assertEquals(DiagnosticsStatus.FAIL, diagnosticsResult.getStatus());
     }
 
     @Test
@@ -155,6 +141,5 @@ public class SchedulerDiagnosticServiceTest {
         System.out.println(diagnosticsResult.getMessage());
         assertTrue(diagnosticsResult.getMessage().contains(String.format("Unscheduled Job: unscheduled.job")));
         assertEquals(DiagnosticsStatus.FAIL, diagnosticsResult.getStatus());
-        verify(motechScheduler, never()).isStarted();
     }
 }
