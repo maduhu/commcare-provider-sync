@@ -1,8 +1,11 @@
-package org.motechproject.commcare.provider.sync.diagnostics;
+package org.motechproject.commcare.provider.sync.web.controller;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.motechproject.commcare.provider.sync.diagnostics.DiagnosticsResult;
+import org.motechproject.commcare.provider.sync.diagnostics.DiagnosticsStatus;
+import org.motechproject.commcare.provider.sync.diagnostics.SchedulerDiagnosticService;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;

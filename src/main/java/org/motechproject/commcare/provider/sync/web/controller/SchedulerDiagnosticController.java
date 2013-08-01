@@ -1,5 +1,8 @@
-package org.motechproject.commcare.provider.sync.diagnostics;
+package org.motechproject.commcare.provider.sync.web.controller;
 
+import org.motechproject.commcare.provider.sync.diagnostics.DiagnosticsResult;
+import org.motechproject.commcare.provider.sync.diagnostics.DiagnosticsStatus;
+import org.motechproject.commcare.provider.sync.diagnostics.SchedulerDiagnosticService;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -8,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
+@RequestMapping(value = "/web-api")
 public class SchedulerDiagnosticController {
 
     private SchedulerDiagnosticService schedulerDiagnosticService;
@@ -17,7 +21,7 @@ public class SchedulerDiagnosticController {
         this.schedulerDiagnosticService = schedulerDiagnosticService;
     }
 
-    @RequestMapping(value = "/commcare/diagnostics/scheduler", method = RequestMethod.GET)
+    @RequestMapping(value = "/diagnostics/scheduler", method = RequestMethod.GET)
     @ResponseBody
     public String commcareSyncSchedulerStatus() throws SchedulerException {
         DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseAllSchedules();
