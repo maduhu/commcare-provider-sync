@@ -84,12 +84,6 @@
             <artifactId>org.motechproject.osgi.it</artifactId>
             <version>1.0.2.RELEASE-r014</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>com.springsource.slf4j.api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
