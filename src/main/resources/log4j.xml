@@ -17,18 +17,6 @@
         </layout>
     </appender>
 
-    <appender name="Email" class="org.motechproject.commcare.provider.sync.logger.EmailAppender">
-        <param name="SMTPHost" value="gmail-smtp-in.l.google.com" />
-        <param name="BufferSize" value="512" />
-        <param name="From" value="ananya_errors@thoughtworks.com" />
-        <param name="To" value="motech_care@thoughtworks.com" />
-        <param name="Subject" value="Ananya Care Provider Sync Error | DEV | {hostname} | {bodyhash}" />
-        <layout class="org.apache.log4j.EnhancedPatternLayout">
-            <param name="ConversionPattern" value="[%t] - %d %-5p [%c] %m%n" />
-        </layout>
-        <param name="Threshold" value="ERROR" />
-    </appender>
-
     <logger name="commcare-provider-sync">
         <level value="INFO" />
     </logger>
@@ -37,7 +25,6 @@
         <level value="ERROR" />
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FA2" />
-        <appender-ref ref="Email" />
     </root>
 
 </log4j:configuration>
