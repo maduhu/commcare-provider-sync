@@ -25,7 +25,7 @@ public class SchedulerDiagnosticController {
         this.schedulerDiagnosticService = schedulerDiagnosticService;
     }
 
-    @RequestMapping(value = "/diagnostics/scheduler-commcare-sync", method = RequestMethod.GET)
+    @RequestMapping(value = "/diagnostics/scheduler-commcare-provider-sync", method = RequestMethod.GET)
     @ResponseBody
     public String commcareSyncSchedulerStatus() throws SchedulerException {
         DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(getSchedulesToDiagnose());
