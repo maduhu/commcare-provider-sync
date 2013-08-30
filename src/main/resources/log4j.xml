@@ -17,14 +17,15 @@
         </layout>
     </appender>
 
-    <logger name="commcare-provider-sync">
-        <level value="INFO" />
+    <logger name="commcare-provider-sync" additivity="false">
+        <level value="DEBUG" />
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FA2" />
     </logger>
 
     <root>
         <level value="ERROR" />
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FA2" />
     </root>
 
 </log4j:configuration>
