@@ -171,7 +171,8 @@
                         <Resource-Path>commcare-provider-sync/resources</Resource-Path>
                         <Export-Package>
                             org.motechproject.commcare.provider.sync.constants;version=${project.version},
-                            org.motechproject.commcare.provider.sync.response;version=${project.version}
+                            org.motechproject.commcare.provider.sync.response;version=${project.version},
+                            org.motechproject.commcare.provider.sync.diagnostics;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.server.config;version=${motech.version},

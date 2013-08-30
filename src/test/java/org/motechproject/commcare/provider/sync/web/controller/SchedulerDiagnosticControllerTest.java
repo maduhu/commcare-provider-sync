@@ -11,6 +11,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import static junit.framework.Assert.assertEquals;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -33,7 +34,7 @@ public class SchedulerDiagnosticControllerTest {
     @Test
     public void shouldReturnSuccessWhenObdSchedulesRunAsExpected() throws Exception {
         schedulerDiagnosticController = new SchedulerDiagnosticController(schedulerDiagnosticService);
-        when(schedulerDiagnosticService.diagnoseAllSchedules()).thenReturn(new DiagnosticsResult(DiagnosticsStatus.PASS, "message"));
+        when(schedulerDiagnosticService.diagnoseSchedules(anyList())).thenReturn(new DiagnosticsResult(DiagnosticsStatus.PASS, "message"));
 
         String status = schedulerDiagnosticController.commcareSyncSchedulerStatus();
 
@@ -43,7 +44,7 @@ public class SchedulerDiagnosticControllerTest {
     @Test
     public void shouldReturnFailureWhenObdSchedulesDoNotRunAsExpected() throws Exception {
         schedulerDiagnosticController = new SchedulerDiagnosticController(schedulerDiagnosticService);
-        when(schedulerDiagnosticService.diagnoseAllSchedules()).thenReturn(new DiagnosticsResult(DiagnosticsStatus.FAIL, "Commcare sync Schedulers not running"));
+        when(schedulerDiagnosticService.diagnoseSchedules(anyList())).thenReturn(new DiagnosticsResult(DiagnosticsStatus.FAIL, "Commcare sync Schedulers not running"));
 
         String status = schedulerDiagnosticController.commcareSyncSchedulerStatus();
 
