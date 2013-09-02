@@ -32,10 +32,6 @@
                     <groupId>org.springframework</groupId>
                     <artifactId>org.springframework.context</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>com.springsource.slf4j.api</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
         <!-- to send/receive motech events -->
