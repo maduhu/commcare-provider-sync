@@ -5,13 +5,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@Controller("commCareSyncPingController")
-@RequestMapping("/web-api")
+@Controller
+@RequestMapping("/web-api/commcare-provider-sync")
 public class PingController {
 
-    @RequestMapping(value = "/ping-commcare-provider-sync", method = RequestMethod.GET)
+    @RequestMapping(value = "/ping", method = RequestMethod.GET)
     @ResponseBody
-    public String pingPage() {
+    public String ping() {
         return "CommcareProviderSync Ping Page";
     }
 }

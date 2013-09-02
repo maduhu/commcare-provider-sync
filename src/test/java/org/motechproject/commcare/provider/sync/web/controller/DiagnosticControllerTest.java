@@ -15,8 +15,8 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class SchedulerDiagnosticControllerTest {
-    private SchedulerDiagnosticController schedulerDiagnosticController;
+public class DiagnosticControllerTest {
+    private DiagnosticController diagnosticController;
 
     @Mock
     private SchedulerDiagnosticService schedulerDiagnosticService;
@@ -33,20 +33,20 @@ public class SchedulerDiagnosticControllerTest {
 
     @Test
     public void shouldReturnSuccessWhenObdSchedulesRunAsExpected() throws Exception {
-        schedulerDiagnosticController = new SchedulerDiagnosticController(schedulerDiagnosticService);
+        diagnosticController = new DiagnosticController(schedulerDiagnosticService);
         when(schedulerDiagnosticService.diagnoseSchedules(anyList())).thenReturn(new DiagnosticsResult(DiagnosticsStatus.PASS, "message"));
 
-        String status = schedulerDiagnosticController.commcareSyncSchedulerStatus();
+        String status = diagnosticController.diagnoseScheduler();
 
         assertEquals("SUCCESS", status);
     }
 
     @Test
     public void shouldReturnFailureWhenObdSchedulesDoNotRunAsExpected() throws Exception {
-        schedulerDiagnosticController = new SchedulerDiagnosticController(schedulerDiagnosticService);
+        diagnosticController = new DiagnosticController(schedulerDiagnosticService);
         when(schedulerDiagnosticService.diagnoseSchedules(anyList())).thenReturn(new DiagnosticsResult(DiagnosticsStatus.FAIL, "Commcare sync Schedulers not running"));
 
-        String status = schedulerDiagnosticController.commcareSyncSchedulerStatus();
+        String status = diagnosticController.diagnoseScheduler();
 
         assertEquals("FAILURE\nCommcare sync Schedulers not running", status);
     }

@@ -15,19 +15,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@RequestMapping(value = "/web-api")
-public class SchedulerDiagnosticController {
+@RequestMapping(value = "/web-api/commcare-provider-sync/diagnostics")
+public class DiagnosticController {
 
     private SchedulerDiagnosticService schedulerDiagnosticService;
 
     @Autowired
-    public SchedulerDiagnosticController(SchedulerDiagnosticService schedulerDiagnosticService) {
+    public DiagnosticController(SchedulerDiagnosticService schedulerDiagnosticService) {
         this.schedulerDiagnosticService = schedulerDiagnosticService;
     }
 
-    @RequestMapping(value = "/diagnostics/scheduler-commcare-provider-sync", method = RequestMethod.GET)
+    @RequestMapping(value = "/scheduler", method = RequestMethod.GET)
     @ResponseBody
-    public String commcareSyncSchedulerStatus() throws SchedulerException {
+    public String diagnoseScheduler() throws SchedulerException {
         DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(getSchedulesToDiagnose());
         return diagnosticsResult.getStatus().equals(DiagnosticsStatus.PASS)
                 ? "SUCCESS"
