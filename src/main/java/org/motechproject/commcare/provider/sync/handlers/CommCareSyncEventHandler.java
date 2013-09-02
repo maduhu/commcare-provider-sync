@@ -29,7 +29,7 @@ public class CommCareSyncEventHandler {
     @SuppressWarnings("unused - motechEvent expected as parameter by cron invoker")
     public synchronized void handleProviderSync(MotechEvent motechEvent) {
         logger.info("Handling provider sync event");
-        commCareSyncService.fetchDetailsInBatch(new BatchRequestQuery(0), BatchJobType.PROVIDER);
+        commCareSyncService.startSync(BatchJobType.PROVIDER);
     }
 
     @MotechListener(subjects = {EventConstants.PROVIDER_FETCH_DETAILS_IN_BATCH_EVENT})
@@ -45,7 +45,7 @@ public class CommCareSyncEventHandler {
     @SuppressWarnings("unused - motechEvent expected as parameter by cron invoker")
     public synchronized void handleGroupSync(MotechEvent motechEvent) {
         logger.info("Handling group sync event");
-        commCareSyncService.fetchDetailsInBatch(new BatchRequestQuery(0), BatchJobType.GROUP);
+        commCareSyncService.startSync(BatchJobType.GROUP);
     }
 
     @MotechListener(subjects = {EventConstants.GROUP_FETCH_DETAILS_IN_BATCH_EVENT})

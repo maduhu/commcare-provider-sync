@@ -31,10 +31,15 @@ public class CommCareSyncService {
         this.providerSyncSettings = providerSyncSettings;
     }
 
+    public void startSync(BatchJobType batchJobType) {
+        fetchDetailsInBatch(new BatchRequestQuery(0), batchJobType);
+    }
+
     public void fetchDetailsInBatch(BatchRequestQuery batchRequestQuery, BatchJobType jobType) {
         int batchSize = Integer.parseInt(providerSyncSettings.getProperty(jobType.qualify(PropertyConstants.COMMCARE_BATCH_SIZE)));
-        batchRequestQuery.setBatchSize(batchSize);
 
+        batchRequestQuery.setBatchSize(batchSize);
+        logger.info(String.format("Fetching %s in batch with %s", jobType, batchRequestQuery));
         String listUrl = providerSyncSettings.getProperty(jobType.qualify(PropertyConstants.COMMCARE_LIST_URL));
         BatchResponse batchResponse = (BatchResponse) commCareHttpClientService.fetchBatch(listUrl, batchRequestQuery, jobType.commcareResponseType());
 

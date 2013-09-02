@@ -20,11 +20,14 @@ public class BatchRequestQuery implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("offset: %s, Batch Size: %s", offset, batchSize);
+        return String.format("Offset: %s, Batch Size: %s", offset, batchSize);
     }
 
     public int getOffset() {
         return offset;
     }
 
+    public int getBatchSize() {
+        return batchSize;
+    }
 }

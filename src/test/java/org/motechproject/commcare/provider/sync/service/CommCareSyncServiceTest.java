@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,6 +46,41 @@ public class CommCareSyncServiceTest {
     @Before
     public void setUp() {
         commcareSyncService = new CommCareSyncService(eventRelay, commCareHttpClientService, providerSyncSettings);
+    }
+
+    @Test
+    public void shouldStartSync() {
+        int batchSize = 45;
+        String providerUrl = "providerListUrl";
+        ProviderDetailsResponse providerDetailsResponse = mock(ProviderDetailsResponse.class);
+        BatchResponseMetadata meta = mock(BatchResponseMetadata.class);
+        final BatchRequestQuery nextBatchRequestQuery = new BatchRequestQuery(12);
+
+        when(providerSyncSettings.getProperty("commcare.batch.size.provider")).thenReturn(Integer.toString(batchSize));
+        when(providerSyncSettings.getProperty("commcare.list.url.provider")).thenReturn(providerUrl);
+
+        when(commCareHttpClientService.fetchBatch(eq(providerUrl), any(BatchRequestQuery.class), eq(ProviderDetailsResponse.class))).thenReturn(providerDetailsResponse);
+
+        final List<Provider> providers = Arrays.asList(new Provider(), new Provider());
+        when(providerDetailsResponse.getRecords()).thenReturn(providers);
+        when(providerDetailsResponse.getMeta()).thenReturn(meta);
+        when(providerDetailsResponse.hasRecords()).thenReturn(true);
+        when(meta.getNextBatchQuery(batchSize)).thenReturn(nextBatchRequestQuery);
+        when(meta.hasNext()).thenReturn(true);
+
+        commcareSyncService.startSync(BatchJobType.PROVIDER);
+
+        ArgumentCaptor<BatchRequestQuery> batchRequestQueryArgumentCaptor = ArgumentCaptor.forClass(BatchRequestQuery.class);
+        verify(commCareHttpClientService).fetchBatch(eq(providerUrl), batchRequestQueryArgumentCaptor.capture(), eq(ProviderDetailsResponse.class));
+        BatchRequestQuery actualBatchRequestQuery = batchRequestQueryArgumentCaptor.getValue();
+        assertEquals(0, actualBatchRequestQuery.getOffset());
+        assertEquals(batchSize, actualBatchRequestQuery.getBatchSize());
+
+        assertEventToBePublished(new MotechEvent(EventConstants.PROVIDER_DETAILS_EVENT, new HashMap<String, Object>() {{
+            put(EventConstants.DETAILS_LIST, providers);
+        }}), new MotechEvent(EventConstants.PROVIDER_FETCH_DETAILS_IN_BATCH_EVENT, new HashMap<String, Object>() {{
+            put(EventConstants.BATCH_QUERY, nextBatchRequestQuery);
+        }}));
     }
 
     @Test

@@ -31,4 +31,9 @@
           class="org.springframework.http.client.HttpComponentsClientHttpRequestFactory"/>
 
     <util:properties id="quartzProperties" location="classpath:/quartz.properties"/>
+
+    <bean id="syncTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor">
+            <constructor-arg value="commcare-manual-sync"></constructor-arg>
+    </bean>
+
 </beans>

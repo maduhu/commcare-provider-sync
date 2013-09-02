@@ -3,7 +3,6 @@ package org.motechproject.commcare.provider.sync.handlers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.commcare.provider.sync.constants.EventConstants;
@@ -13,8 +12,6 @@ import org.motechproject.commcare.provider.sync.service.CommCareSyncService;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -35,18 +32,14 @@ public class CommCareSyncEventHandlerTest {
     public void shouldHandleProviderSyncEvent() {
         commCareSyncEventHandler.handleProviderSync(null);
 
-        ArgumentCaptor<BatchRequestQuery> batchRequestQueryArgumentCaptor = ArgumentCaptor.forClass(BatchRequestQuery.class);
-        verify(commCareSyncService).fetchDetailsInBatch(batchRequestQueryArgumentCaptor.capture(), eq(BatchJobType.PROVIDER));
-        assertEquals(0, batchRequestQueryArgumentCaptor.getValue().getOffset());
+        verify(commCareSyncService).startSync(BatchJobType.PROVIDER);
     }
 
     @Test
     public void shouldHandleGroupSyncEvent() {
         commCareSyncEventHandler.handleGroupSync(null);
 
-        ArgumentCaptor<BatchRequestQuery> batchRequestQueryArgumentCaptor = ArgumentCaptor.forClass(BatchRequestQuery.class);
-        verify(commCareSyncService).fetchDetailsInBatch(batchRequestQueryArgumentCaptor.capture(), eq(BatchJobType.GROUP));
-        assertEquals(0, batchRequestQueryArgumentCaptor.getValue().getOffset());
+        verify(commCareSyncService).startSync(BatchJobType.GROUP);
     }
 
     @Test
