@@ -24,13 +24,21 @@
         </property>
     </bean>
 
+    <bean id="quartzSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="moduleName" value="commcare-provider-sync"/>
+        <property name="configFiles">
+            <list>
+                <value>classpath:quartz.properties</value>
+            </list>
+        </property>
+    </bean>
+
     <bean id="commCareRestTemplate" class="org.springframework.web.client.RestTemplate">
         <constructor-arg ref="httpComponentsClientHttpRequestFactory"/>
     </bean>
     <bean id="httpComponentsClientHttpRequestFactory"
           class="org.springframework.http.client.HttpComponentsClientHttpRequestFactory"/>
 
-    <util:properties id="quartzProperties" location="classpath:/quartz.properties"/>
 
     <bean id="syncTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor">
             <constructor-arg value="commcare-manual-sync"></constructor-arg>

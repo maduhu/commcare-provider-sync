@@ -4,6 +4,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.joda.time.DateTime;
 import org.motechproject.commons.date.util.DateUtil;
+import org.motechproject.server.config.SettingsFacade;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -27,8 +28,8 @@ public class SchedulerDiagnosticServiceImpl implements SchedulerDiagnosticServic
     private Scheduler scheduler;
 
     @Autowired
-    public SchedulerDiagnosticServiceImpl(ApplicationContext applicationContext, @Qualifier("quartzProperties") Properties quartzProperties) throws Exception {
-        SchedulerFactoryBean schedulerFactoryBean = initializeSchedulerFactoryBean(applicationContext, quartzProperties);
+    public SchedulerDiagnosticServiceImpl(ApplicationContext applicationContext, @Qualifier("quartzSettings") SettingsFacade quartzSettings) throws Exception {
+        SchedulerFactoryBean schedulerFactoryBean = initializeSchedulerFactoryBean(applicationContext, quartzSettings.asProperties());
         scheduler = schedulerFactoryBean.getScheduler();
     }
 
