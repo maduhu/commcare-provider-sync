@@ -230,7 +230,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeScope>compile</includeScope>
+                            <includeScope>runtime</includeScope>
                             <overWriteIfNewer>true</overWriteIfNewer>
                             <outputDirectory>
                                 ${user.home}/.motech/bundles
