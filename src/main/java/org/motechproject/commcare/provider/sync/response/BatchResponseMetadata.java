@@ -48,4 +48,15 @@ public class BatchResponseMetadata {
     public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
+
+    @Override
+    public String toString() {
+        return "BatchResponseMetadata{" +
+                "limit=" + limit +
+                ", next='" + next + '\'' +
+                ", offset=" + offset +
+                ", previous='" + previous + '\'' +
+                ", totalCount=" + totalCount +
+                '}';
+    }
 }

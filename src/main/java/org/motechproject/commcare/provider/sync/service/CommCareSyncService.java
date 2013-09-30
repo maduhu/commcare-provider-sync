@@ -72,6 +72,7 @@ public class CommCareSyncService {
         String detailsEvent = jobType.qualify(EventConstants.DETAILS_EVENT);
         List<Provider> providers = batchResponse.getRecords();
         logger.info(String.format("Found %s records in response.", providers.size()));
+        logger.info(String.format("Response meta: %s", batchResponse.getMeta()));
         logger.info(String.format("Publishing details event %s", detailsEvent));
         Map<String, Object> parameters = new HashMap<>();
         parameters.put(EventConstants.DETAILS_LIST, providers);
