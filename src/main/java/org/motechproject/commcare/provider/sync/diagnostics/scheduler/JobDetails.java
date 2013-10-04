@@ -1,4 +1,4 @@
-package org.motechproject.commcare.provider.sync.diagnostics;
+package org.motechproject.commcare.provider.sync.diagnostics.scheduler;
 
 import java.util.Date;
 

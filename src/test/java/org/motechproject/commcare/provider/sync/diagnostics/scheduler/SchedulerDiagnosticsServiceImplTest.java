@@ -1,44 +1,55 @@
-package org.motechproject.commcare.provider.sync.diagnostics;
+package org.motechproject.commcare.provider.sync.diagnostics.scheduler;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.quartz.*;
+import org.motechproject.commcare.provider.sync.diagnostics.DiagnosticsLogger;
+import org.motechproject.commcare.provider.sync.diagnostics.DiagnosticsStatus;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-@RunWith(MockitoJUnitRunner.class)
-public class SchedulerDiagnosticServiceImplTest {
+public class SchedulerDiagnosticsServiceImplTest {
     @Mock
     private Scheduler motechScheduler;
     @Mock
     private SchedulerFactoryBean schedulerFactoryBean;
     @Mock
     Trigger mockTrigger1, mockTrigger2;
+    @Mock
+    private DiagnosticsLogger diagnosticsLogger;
 
     String providerSync = "commcare.provider.sync.schedule";
     String groupSync = "commcare.group.sync.schedule";
-    private final String schedulerDiagnosticsFormat = "Job : %s\nPrevious Fire Time : %s\nNext Fire Time : %s\nHas job run in previous day : %s";
-    private SchedulerDiagnosticServiceImpl schedulerDiagnosticService;
+    private final String schedulerDiagnosticsFormat = "Job: %s\nPrevious Fire Time: %s\nNext Fire Time: %s\nHas job run in previous day: %s";
+    private SchedulerDiagnosticsServiceImpl schedulerDiagnosticsService;
 
     @Before
     public void setUp() {
+        initMocks(this);
         when(schedulerFactoryBean.getScheduler()).thenReturn(motechScheduler);
-        schedulerDiagnosticService = new SchedulerDiagnosticServiceImpl(schedulerFactoryBean);
+        schedulerDiagnosticsService = new SchedulerDiagnosticsServiceImpl(schedulerFactoryBean);
     }
 
     private void initializeTriggers() throws SchedulerException{
@@ -68,14 +79,14 @@ public class SchedulerDiagnosticServiceImplTest {
         when(mockTrigger2.getPreviousFireTime()).thenReturn(null);
         when(mockTrigger2.getNextFireTime()).thenReturn(DateTime.now().plusMonths(4).toDate());
 
-        DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(new ArrayList<String>() {{
+        DiagnosticsStatus diagnosticsStatus = schedulerDiagnosticsService.diagnoseSchedules(new ArrayList<String>() {{
             add(providerSync);
             add(groupSync);
-        }});
+        }}, diagnosticsLogger);
 
-        assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, providerSync, "This job has not yet run", mockTrigger1.getNextFireTime(), "N/A")));
-        assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, groupSync, "This job has not yet run", mockTrigger2.getNextFireTime(), "N/A")));
-        assertEquals(DiagnosticsStatus.PASS, diagnosticsResult.getStatus());
+        verifyLogEntry(diagnosticsLogger, providerSync, null, mockTrigger1.getNextFireTime(), "N/A");
+        verifyLogEntry(diagnosticsLogger, groupSync, null, mockTrigger2.getNextFireTime(), "N/A");
+        assertEquals(DiagnosticsStatus.PASS, diagnosticsStatus);
     }
 
     @Test
@@ -86,14 +97,14 @@ public class SchedulerDiagnosticServiceImplTest {
         when(mockTrigger2.getPreviousFireTime()).thenReturn(DateTime.now().minusDays(5).toDate());
         when(mockTrigger2.getNextFireTime()).thenReturn(DateTime.now().plusMonths(4).toDate());
 
-        DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(new ArrayList<String>() {{
+        DiagnosticsStatus diagnosticsStatus = schedulerDiagnosticsService.diagnoseSchedules(new ArrayList<String>() {{
             add(providerSync);
             add(groupSync);
-        }});
+        }}, diagnosticsLogger);
 
-        assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, providerSync, mockTrigger1.getPreviousFireTime(), mockTrigger1.getNextFireTime(), "No")));
-        assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, groupSync, mockTrigger2.getPreviousFireTime(), mockTrigger2.getNextFireTime(), "Yes")));
-        assertEquals(DiagnosticsStatus.FAIL, diagnosticsResult.getStatus());
+        verifyLogEntry(diagnosticsLogger, providerSync, mockTrigger1.getPreviousFireTime(), mockTrigger1.getNextFireTime(), "No");
+        verifyLogEntry(diagnosticsLogger, groupSync, mockTrigger2.getPreviousFireTime(), mockTrigger2.getNextFireTime(), "Yes");
+        assertEquals(DiagnosticsStatus.FAIL, diagnosticsStatus);
     }
 
     @Test
@@ -104,14 +115,14 @@ public class SchedulerDiagnosticServiceImplTest {
         when(mockTrigger2.getPreviousFireTime()).thenReturn(DateTime.now().minusDays(4).toDate());
         when(mockTrigger2.getNextFireTime()).thenReturn(DateTime.now().plusMonths(4).toDate());
 
-        DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(new ArrayList<String>() {{
+        DiagnosticsStatus diagnosticsStatus = schedulerDiagnosticsService.diagnoseSchedules(new ArrayList<String>() {{
             add(providerSync);
             add(groupSync);
-        }});
+        }}, diagnosticsLogger);
 
-        assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, providerSync, mockTrigger1.getPreviousFireTime(), mockTrigger1.getNextFireTime(), "No")));
-        assertTrue(diagnosticsResult.getMessage().contains(String.format(schedulerDiagnosticsFormat, groupSync, mockTrigger2.getPreviousFireTime(), mockTrigger2.getNextFireTime(), "Yes")));
-        assertEquals(DiagnosticsStatus.FAIL, diagnosticsResult.getStatus());
+        verifyLogEntry(diagnosticsLogger, providerSync, mockTrigger1.getPreviousFireTime(), mockTrigger1.getNextFireTime(), "No");
+        verifyLogEntry(diagnosticsLogger, groupSync, mockTrigger2.getPreviousFireTime(), mockTrigger2.getNextFireTime(), "Yes");
+        assertEquals(DiagnosticsStatus.FAIL, diagnosticsStatus);
     }
 
     @Test
@@ -122,12 +133,12 @@ public class SchedulerDiagnosticServiceImplTest {
         when(mockTrigger2.getPreviousFireTime()).thenReturn(DateTime.now().minusDays(6).toDate());
         when(mockTrigger2.getNextFireTime()).thenReturn(DateTime.now().plusHours(1).toDate());
 
-        DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(new ArrayList<String>() {{
+        DiagnosticsStatus diagnosticsStatus = schedulerDiagnosticsService.diagnoseSchedules(new ArrayList<String>() {{
             add(providerSync);
             add(groupSync);
-        }});
+        }}, diagnosticsLogger);
 
-        assertEquals(DiagnosticsStatus.PASS, diagnosticsResult.getStatus());
+        assertEquals(DiagnosticsStatus.PASS, diagnosticsStatus);
     }
 
     @Test
@@ -136,22 +147,29 @@ public class SchedulerDiagnosticServiceImplTest {
         when(mockTrigger1.getPreviousFireTime()).thenReturn(null);
         when(mockTrigger1.getNextFireTime()).thenReturn(DateTime.now().plusHours(4).toDate());
 
-        DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(new ArrayList<String>() {{
+        DiagnosticsStatus diagnosticsStatus = schedulerDiagnosticsService.diagnoseSchedules(new ArrayList<String>() {{
             add(providerSync);
             add(groupSync);
-        }});
+        }}, diagnosticsLogger);
 
-        assertEquals(DiagnosticsStatus.PASS, diagnosticsResult.getStatus());
+        assertEquals(DiagnosticsStatus.PASS, diagnosticsStatus);
     }
 
     @Test
     public void shouldFailIfAllTheJobsAreNotScheduled() throws SchedulerException {
-        schedulerDiagnosticService = new SchedulerDiagnosticServiceImpl(schedulerFactoryBean);
+        schedulerDiagnosticsService = new SchedulerDiagnosticsServiceImpl(schedulerFactoryBean);
 
-        DiagnosticsResult diagnosticsResult = schedulerDiagnosticService.diagnoseSchedules(Arrays.asList("unscheduled.job"));
+        DiagnosticsStatus diagnosticsStatus = schedulerDiagnosticsService.diagnoseSchedules(Arrays.asList("unscheduled.job"), diagnosticsLogger);
 
-        System.out.println(diagnosticsResult.getMessage());
-        assertTrue(diagnosticsResult.getMessage().contains(String.format("Unscheduled Job: unscheduled.job")));
-        assertEquals(DiagnosticsStatus.FAIL, diagnosticsResult.getStatus());
+        verify(diagnosticsLogger).log(String.format("Unscheduled Job: unscheduled.job"));
+        assertEquals(DiagnosticsStatus.FAIL, diagnosticsStatus);
+    }
+
+    private void verifyLogEntry(DiagnosticsLogger diagnosticsLogger, String jobName, Date previousFireTime, Date nextFireTime, String runStatusInPreviousWeek) {
+        InOrder inOrder = inOrder(diagnosticsLogger);
+        inOrder.verify(diagnosticsLogger).log("Job: " + jobName);
+        inOrder.verify(diagnosticsLogger).log("Previous Fire Time: " + (previousFireTime == null ? "Has not yet run" : previousFireTime));
+        inOrder.verify(diagnosticsLogger).log("Next Fire Time: " + (nextFireTime == null ? "Not scheduled" : nextFireTime));
+        inOrder.verify(diagnosticsLogger).log("Has Run In Previous Week: " + runStatusInPreviousWeek);
     }
 }

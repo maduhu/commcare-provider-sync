@@ -19,6 +19,6 @@
     <osgi:reference id="schedulerServiceOsgi" interface="org.motechproject.scheduler.MotechSchedulerService"
                     cardinality="0..1"/>
 
-    <osgi:service id="schedulerDiagnosticServiceOsgi" interface="org.motechproject.commcare.provider.sync.diagnostics.SchedulerDiagnosticService" ref="schedulerDiagnosticService"
+    <osgi:service id="schedulerDiagnosticsServiceOsgi" interface="org.motechproject.commcare.provider.sync.diagnostics.scheduler.SchedulerDiagnosticsService" ref="schedulerDiagnosticsService"
                   auto-export="interfaces" />
 </beans>
