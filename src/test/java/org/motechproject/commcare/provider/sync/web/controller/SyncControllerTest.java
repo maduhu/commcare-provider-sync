@@ -28,7 +28,7 @@ public class SyncControllerTest {
 
     @Test
     public void shouldStartProviderSync() {
-        controller.syncProvider();
+        controller.syncProviders();
 
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(taskExecutor).execute(runnableCaptor.capture());
@@ -42,7 +42,7 @@ public class SyncControllerTest {
 
     @Test
     public void shouldStartGroupSync() {
-        controller.syncGroup();
+        controller.syncGroups();
 
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(taskExecutor).execute(runnableCaptor.capture());

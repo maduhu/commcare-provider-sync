@@ -28,7 +28,7 @@ public class SyncController {
 
     @RequestMapping(value = "/providers", method = RequestMethod.GET)
     @ResponseBody
-    public String syncProvider() {
+    public String syncProviders() {
         taskExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -41,7 +41,7 @@ public class SyncController {
 
     @RequestMapping(value = "/groups", method = RequestMethod.GET)
     @ResponseBody
-    public String syncGroup() {
+    public String syncGroups() {
         taskExecutor.execute(new Runnable() {
             @Override
             public void run() {
