@@ -26,7 +26,7 @@ public class SyncController {
         this.taskExecutor = taskExecutor;
     }
 
-    @RequestMapping(value = "/provider", method = RequestMethod.GET)
+    @RequestMapping(value = "/providers", method = RequestMethod.GET)
     @ResponseBody
     public String syncProvider() {
         taskExecutor.execute(new Runnable() {
@@ -39,7 +39,7 @@ public class SyncController {
         return "provider sync started.";
     }
 
-    @RequestMapping(value = "/group", method = RequestMethod.GET)
+    @RequestMapping(value = "/groups", method = RequestMethod.GET)
     @ResponseBody
     public String syncGroup() {
         taskExecutor.execute(new Runnable() {
