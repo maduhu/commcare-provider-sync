@@ -1,8 +1,17 @@
 package org.motechproject.commcare.provider.sync.scheduler;
 
+import static org.motechproject.commcare.provider.sync.constants.EventConstants.GROUP_SYNC_EVENT;
+import static org.motechproject.commcare.provider.sync.constants.EventConstants.GROUP_SYNC_JOB_ID_KEY;
+import static org.motechproject.commcare.provider.sync.constants.EventConstants.PROVIDER_SYNC_EVENT;
+import static org.motechproject.commcare.provider.sync.constants.EventConstants.PROVIDER_SYNC_JOB_ID_KEY;
+import static org.motechproject.commcare.provider.sync.constants.PropertyConstants.GROUP_SYNC_CRON_EXPRESSION;
+import static org.motechproject.commcare.provider.sync.constants.PropertyConstants.PROVIDER_SYNC_CRON_EXPRESSION;
+
+import java.util.HashMap;
+
 import org.motechproject.event.MotechEvent;
-import org.motechproject.scheduler.MotechSchedulerService;
-import org.motechproject.scheduler.domain.CronSchedulableJob;
+import org.motechproject.scheduler.contract.CronSchedulableJob;
+import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,12 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-
-import static org.motechproject.commcare.provider.sync.constants.EventConstants.*;
-import static org.motechproject.commcare.provider.sync.constants.PropertyConstants.GROUP_SYNC_CRON_EXPRESSION;
-import static org.motechproject.commcare.provider.sync.constants.PropertyConstants.PROVIDER_SYNC_CRON_EXPRESSION;
 
 @Component
 @Lazy(false)

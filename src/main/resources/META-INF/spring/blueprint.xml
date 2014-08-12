@@ -16,7 +16,7 @@
     <osgi:reference id="platformSettingsService"
                     interface="org.motechproject.server.config.service.PlatformSettingsService"/>
 
-    <osgi:reference id="schedulerServiceOsgi" interface="org.motechproject.scheduler.MotechSchedulerService"
+    <osgi:reference id="schedulerServiceOsgi" interface="org.motechproject.scheduler.service.MotechSchedulerService"
                     cardinality="0..1"/>
 
     <osgi:service id="schedulerDiagnosticsServiceOsgi" interface="org.motechproject.commcare.provider.sync.diagnostics.scheduler.SchedulerDiagnosticsService" ref="schedulerDiagnosticsService"

@@ -1,5 +1,12 @@
 package org.motechproject.commcare.provider.sync.scheduler;
 
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -7,14 +14,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.commcare.provider.sync.constants.EventConstants;
 import org.motechproject.commcare.provider.sync.constants.PropertyConstants;
-import org.motechproject.scheduler.MotechSchedulerService;
-import org.motechproject.scheduler.domain.CronSchedulableJob;
+import org.motechproject.scheduler.contract.CronSchedulableJob;
+import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
-
-import java.util.List;
-
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommCareSyncSchedulerTest {
