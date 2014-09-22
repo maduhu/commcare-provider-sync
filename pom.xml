@@ -4,12 +4,12 @@
 
     <groupId>org.motechproject</groupId>
     <artifactId>commcare-provider-sync</artifactId>
-    <version>0.24-SNAPSHOT</version>
+    <version>0.24</version>
 
     <packaging>bundle</packaging>
 
     <properties>
-        <motech.version>0.24-SNAPSHOT</motech.version>
+        <motech.version>0.24</motech.version>
         <spring.version>3.1.0.RELEASE</spring.version>
     </properties>
 
